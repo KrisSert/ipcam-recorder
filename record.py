@@ -2,8 +2,11 @@ import subprocess
 import time
 import os
 
+from find_link import find_stream_link
+
 # Direct stream URL extracted from network requests
-stream_url = 'https://s27.ipcamlive.com/streams/1br6itsh2bauufzyb/stream.m3u8'
+stream_url = "https://s27.ipcamlive.com/streams/1bg2ojrcyftlbnxes/stream.m3u8"
+#'https://s27.ipcamlive.com/streams/1br6itsh2bauufzyb/stream.m3u8' 
 
 # Duration of each chunk in seconds (10 minutes)
 chunk_duration = 20 * 60
