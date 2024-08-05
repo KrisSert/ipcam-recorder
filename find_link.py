@@ -1,44 +1,67 @@
-import requests
-from lxml import html
+from playwright.sync_api import sync_playwright
+import re
 
-def find_stream_link(url, iframe_xpath, stream_xpath):
-    # Fetch the HTML content from the URL
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        html_content = response.content
-        tree = html.fromstring(html_content)
-        print(tree)
-        
-        # Find the iframe element using the provided XPath
-        iframes = tree.xpath(iframe_xpath)
-        print(iframes)
-        
-        for iframe in iframes:
-            iframe_src = iframe.get('src')
-            if iframe_src:
-                # Fetch the content of the iframe
-                iframe_response = requests.get(iframe_src)
-                if iframe_response.status_code == 200:
-                    iframe_content = iframe_response.content
-                    iframe_tree = html.fromstring(iframe_content)
-                    
-                    # Find the stream link using the provided XPath
-                    stream_links = iframe_tree.xpath(stream_xpath)
-                    if stream_links:
-                        return stream_links[0]  # Return the first found link
-    
-    return None
 
+def find_stream_link(url, iframe_xpath):
+    with sync_playwright() as p:
+        # Launch the browser
+        browser = p.chromium.launch(headless=True)
+        page = browser.new_page()
+
+        # Open the desired webpage
+        page.goto(url)
+
+        # Navigate to the main element with the specified ID
+        main_element = page.query_selector('#laine')
+        if not main_element:
+            print(f"Main element with id='{main_id}' not found")
+            return
+        
+        # Print the main element's HTML content
+        main_content = main_element.inner_html()
+        
+        # Look for the iframe using the provided XPath
+        iframe_element_handle = page.query_selector(f'xpath={iframe_xpath}')
+
+        if not iframe_element_handle:
+            print(f"Iframe with XPath '{iframe_xpath}' not found")
+            return
+        
+        # Get the iframe object from the element handle
+        iframe = iframe_element_handle.content_frame()
+        iframe.wait_for_selector('body')
+
+        # Search for the JavaScript variables using regular expressions
+        address_match = re.search(r'var\s+address\s*=\s*["\'](.*?)["\'];', iframe.content())
+        streamid_match = re.search(r'var\s+streamid\s*=\s*["\'](.*?)["\'];', iframe.content())
+
+        print(address_match)
+        print(streamid_match)
+        
+        address = address_match.group(1) if address_match else "Not found"
+        streamid = streamid_match.group(1) if streamid_match else "Not found"
+        
+        print(f"Address: {address}")
+        print(f"Stream ID: {streamid}")
+        
+        stream_url = f"{address}streams/{streamid}/stream.m3u8"
+
+        return stream_url
+
+        # Close the browser
+        browser.close()
+
+"""
 # Example usage
 try:
     url = "https://laine.surf/"
-    iframe_xpath = "//iframe[contains(@src, 'ipcamlive')]"  # Modify this XPath to match the iframe structure in your HTML
-    stream_xpath = "//a[contains(@href, 'https://s27.ipcamlive.com/streams') and contains(@href, 'stream.m3u8')]/@href"  # Modify this XPath to match the stream link
-    stream_link = find_stream_link(url, iframe_xpath, stream_xpath)
+    iframe_xpath = "//*[@id='laine']/div/div[2]/div/div/div/iframe"
+    stream_link = find_stream_link(url, iframe_xpath)
     if stream_link:
         print(stream_link)
     else:
         raise Exception("Stream link not found")
+
 except Exception as e:
     print(f"{e}, link was not found")
+"""

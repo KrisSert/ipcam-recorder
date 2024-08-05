@@ -4,9 +4,20 @@ import os
 
 from find_link import find_stream_link
 
-# Direct stream URL extracted from network requests
-stream_url = "https://s27.ipcamlive.com/streams/1bg2ojrcyftlbnxes/stream.m3u8"
-#'https://s27.ipcamlive.com/streams/1br6itsh2bauufzyb/stream.m3u8' 
+
+# find Direct stream URL extracted from Javascript
+try:
+    url = "https://laine.surf/"
+    iframe_xpath = "//*[@id='laine']/div/div[2]/div/div/div/iframe"
+    stream_url = find_stream_link(url, iframe_xpath)
+    if stream_url:
+        print(stream_url)
+    else:
+        raise Exception("Stream link not found")
+        
+except Exception as e:
+    print(f"{e}, link was not found")
+
 
 # Duration of each chunk in seconds (10 minutes)
 chunk_duration = 20 * 60
