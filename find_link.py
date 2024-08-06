@@ -13,12 +13,15 @@ def find_stream_link(url, iframe_xpath):
 
         # Navigate to the main element with the specified ID
         main_element = page.query_selector('#laine')
+        main_element.wait_for_selector('div')
         if not main_element:
             print(f"Main element with id='{main_id}' not found")
             return
         
+        main_element.wait_for_selector('div')
         # Print the main element's HTML content
         main_content = main_element.inner_html()
+
         
         # Look for the iframe using the provided XPath
         iframe_element_handle = page.query_selector(f'xpath={iframe_xpath}')
